@@ -1,0 +1,33 @@
+#Top 10 sales by countries
+#with tmp table
+CREATE TABLE joined_countries
+    row format delimited fields terminated by '|'
+    STORED AS RCFile
+    AS select network, countries.geoname_id, countries.country_name
+        from ip_geocode join countries on ip_geocode.geoname_id = countries.geoname_id;
+
+
+CREATE TEMPORARY TABLE joined_countries AS select network, countries.geoname_id, countries.country_name
+        from ip_geocode join countries on ip_geocode.geoname_id = countries.geoname_id;
+
+select country_name, sum(price) as total from sales
+    join joined_countries on sales.ipaddr = joined_countries.network
+    group by country_name order by total DESC limit 10;
+
+
+#Without tmp table
+select country_name, sum(price) as total from sales join
+    (select network, countries.geoname_id, countries.country_name
+        from ip_geocode join countries on ip_geocode.geoname_id = countries.geoname_id) joined_countries
+    on sales.ipaddr = joined_countries.network
+    group by country_name order by total DESC limit 10;
+
+#Deprecated
+select * from sales
+    join ip_geocode as geo on network = ipaddr
+    join countries as c on c.geoname_id = geo.geoname_id limit 10;
+
+#Deprecated
+select * from sales
+    join ip_geocode as geo on network = ipaddr
+    join countries as c on c.geoname_id = geo.geoname_id limit 10;
